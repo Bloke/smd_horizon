@@ -1,3 +1,564 @@
+<?php
+
+// This is a PLUGIN TEMPLATE for Textpattern CMS.
+
+// Copy this file to a new name like abc_myplugin.php.  Edit the code, then
+// run this file at the command line to produce a plugin for distribution:
+// $ php abc_myplugin.php > abc_myplugin-0.1.txt
+
+// Plugin name is optional.  If unset, it will be extracted from the current
+// file name. Plugin names should start with a three letter prefix which is
+// unique and reserved for each plugin author ("abc" is just an example).
+// Uncomment and edit this line to override:
+$plugin['name'] = 'smd_horizon';
+
+// Allow raw HTML help, as opposed to Textile.
+// 0 = Plugin help is in Textile format, no raw HTML allowed (default).
+// 1 = Plugin help is in raw HTML.  Not recommended.
+# $plugin['allow_html_help'] = 1;
+
+$plugin['version'] = '0.11';
+$plugin['author'] = 'Stef Dawson';
+$plugin['author_uri'] = 'http://stefdawson.com/';
+$plugin['description'] = 'Next/previous article without restrictions';
+
+// Plugin load order:
+// The default value of 5 would fit most plugins, while for instance comment
+// spam evaluators or URL redirectors would probably want to run earlier
+// (1...4) to prepare the environment for everything else that follows.
+// Values 6...9 should be considered for plugins which would work late.
+// This order is user-overrideable.
+$plugin['order'] = '5';
+
+// Plugin 'type' defines where the plugin is loaded
+// 0 = public              : only on the public side of the website (default)
+// 1 = public+admin        : on both the public and admin side
+// 2 = library             : only when include_plugin() or require_plugin() is called
+// 3 = admin               : only on the admin side (no AJAX)
+// 4 = admin+ajax          : only on the admin side (AJAX supported)
+// 5 = public+admin+ajax   : on both the public and admin side (AJAX supported)
+$plugin['type'] = '0';
+
+// Plugin "flags" signal the presence of optional capabilities to the core plugin loader.
+// Use an appropriately OR-ed combination of these flags.
+// The four high-order bits 0xf000 are available for this plugin's private use
+if (!defined('PLUGIN_HAS_PREFS')) define('PLUGIN_HAS_PREFS', 0x0001); // This plugin wants to receive "plugin_prefs.{$plugin['name']}" events
+if (!defined('PLUGIN_LIFECYCLE_NOTIFY')) define('PLUGIN_LIFECYCLE_NOTIFY', 0x0002); // This plugin wants to receive "plugin_lifecycle.{$plugin['name']}" events
+
+$plugin['flags'] = '0';
+
+// Plugin 'textpack' is optional. It provides i18n strings to be used in conjunction with gTxt().
+// Syntax:
+// ## arbitrary comment
+// #@event
+// #@language ISO-LANGUAGE-CODE
+// abc_string_name => Localized String
+
+/** Uncomment me, if you need a textpack
+$plugin['textpack'] = <<< EOT
+#@admin
+#@language en-gb
+abc_sample_string => Sample String
+abc_one_more => One more
+#@language de-de
+abc_sample_string => Beispieltext
+abc_one_more => Noch einer
+EOT;
+**/
+// End of textpack
+
+if (!defined('txpinterface'))
+        @include_once('zem_tpl.php');
+
+# --- BEGIN PLUGIN CODE ---
+// Public interfaces: convenience functions
+function smd_prev($atts, $thing) {
+	$atts['dir'] = 'prev';
+	return smd_nearest($atts, $thing);
+}
+function smd_next($atts, $thing) {
+	$atts['dir'] = 'next';
+	return smd_nearest($atts, $thing);
+}
+function smd_link_to_prev($atts, $thing) {
+	$atts['dir'] = 'prev';
+	return smd_link_to($atts, $thing);
+}
+function smd_link_to_next($atts, $thing) {
+	$atts['dir'] = 'next';
+	return smd_link_to($atts, $thing);
+}
+function smd_if_start($atts, $thing) {
+	$atts['dir'] = 'prev';
+	return smd_if_horizon($atts, $thing);
+}
+function smd_if_end($atts, $thing) {
+	$atts['dir'] = 'next';
+	return smd_if_horizon($atts, $thing);
+}
+
+// ****************************
+// Private function: not for public consumption
+// ****************************
+function smd_if_horizon($atts, $thing) {
+	global $pretext, $thisarticle, $thiscategory, $smd_last, $smd_first, $smd_in_nearest;
+
+	extract(lAtts(array(
+		'type' => 'list',
+		'logic' => 'or',
+		'dir' => 'next',
+		'debug' => 0,
+	), $atts));
+
+	$itout = array(); // For debug only
+	$type = do_list($type);
+	$out = array();
+	foreach ($type as $item) {
+		if ($debug) {
+			$itout[] = $item;
+		}
+		switch ($item) {
+			case 'list':
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (empty($smd_last)) ? true : false;
+					} else {
+						$out[] = (empty($smd_first)) ? true : false;
+					}
+				}
+				break;
+			case 'category':
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (!empty($smd_last) && ($smd_last['category1'] != $thisarticle['category1'] || $smd_last['category2'] != $thisarticle['category2'])) ? true : false;
+					} else {
+						$out[] = (!empty($smd_first) && ($smd_first['category1'] != $thisarticle['category1'] || $smd_first['category2'] != $thisarticle['category2'])) ? true : false;
+					}
+				} else {
+					if ($dir == 'next') {
+						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
+					} else {
+						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
+					}
+				}
+				break;
+			case 'author':
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (!empty($smd_last) && $smd_last['author'] != $thisarticle['authorid']) ? true : false;
+					} else {
+						$out[] = (!empty($smd_first) && $smd_first['author'] != $thisarticle['authorid']) ? true : false;
+					}
+				} else {
+					// Not possible since author lists are not permitted in TXP
+				}
+				break;
+			case 'cat1':
+			case 'category1':
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (!empty($smd_last) && $smd_last['category1'] != $thisarticle['category1']) ? true : false;
+					} else {
+						$out[] = (!empty($smd_first) && $smd_first['category1'] != $thisarticle['category1']) ? true : false;
+					}
+				} else {
+					if ($dir == 'next') {
+						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
+					} else {
+						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
+					}
+				}
+				break;
+			case 'cat2':
+			case 'category2':
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (!empty($smd_last) && $smd_last['category2'] != $thisarticle['category2']) ? true : false;
+					} else {
+						$out[] = (!empty($smd_first) && $smd_first['category2'] != $thisarticle['category2']) ? true : false;
+					}
+				} else {
+					if ($dir == 'next') {
+						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
+					} else {
+						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
+					}
+				}
+				break;
+			case 'section':
+			default:
+				if ($smd_in_nearest) {
+					if ($dir == 'next') {
+						$out[] = (!empty($smd_last) && $smd_last['section'] != $thisarticle['section']) ? true : false;
+					} else {
+						$out[] = (!empty($smd_first) && $smd_first['section'] != $thisarticle['section']) ? true : false;
+					}
+				} else {
+					if ($dir == 'next') {
+						$out[] = empty($pretext['next_id']) ? true : false;
+					} else {
+						$out[] = empty($pretext['prev_id']) ? true : false;
+					}
+				}
+				break;
+		}
+	}
+	if ($debug) {
+		echo '++ TEST RESULTS ++';
+		dmp($itout);
+		dmp($out);
+	}
+	$res = ($out) ? true : false;
+	if (strtolower($logic) == "and" && in_array(false, $out)) {
+		$res = false;
+	}
+	if (strtolower($logic) == "or" && !in_array(true, $out)) {
+		$res = false;
+	}
+	if ($debug) {
+		echo '++ FINAL RESULT ++';
+		dmp($res);
+	}
+	return parse(EvalElse($thing, $res));
+}
+
+// ****************************
+// Private function: not for public consumption
+// ****************************
+function smd_nearest($atts, $thing) {
+	global $pretext, $thisarticle, $thiscategory, $prefs, $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
+
+	extract(lAtts(array(
+		'section' => $pretext['s'],
+		'category' => $pretext['c'],
+		'author' => $pretext['author'],
+		'realname' => '',
+		'status' => '4',
+		'time' => 'any', // any, future, past
+		'datasort' => 'section, category1, category2, author',
+		'timesort' => 'posted',
+		'form' => '',
+		'dir' => 'next', // Set by wrapper tags
+		'debug' => 0,
+	), $atts));
+
+	extract($prefs);
+	$smd_in_nearest = true;
+
+	$thing = (empty($form)) ? $thing : fetch_form($form);
+	$expired = ($publish_expired_articles) ? '' : ' AND (now() <= Expires or Expires = '.NULLDATETIME.')';
+	$safe_name = safe_pfx('textpattern');
+
+	// Filters
+	$catSQL = $secSQL = $authSQL = '';
+	if($category) {
+		$catSQL = doQuote(join("','", doSlash(do_list($category))));
+		$catSQL = ' AND ( Category1 IN ('.$catSQL.') OR Category2 IN ('.$catSQL.') ) ';
+	}
+	if($section) {
+		$secSQL = ' AND Section IN ('.doQuote(join("','", doSlash(do_list($section)))).') ';
+	}
+	if($realname) {
+		$author = join(',', safe_column('name', 'txp_users', 'RealName IN ('. doQuote(join("','", doSlash(doArray(do_list($realname), 'urldecode')))) .')' ));
+	}
+	if($author) {
+		$authSQL = ' AND AuthorID IN ('.doQuote(join("','", doSlash(do_list($author)))).') ';
+	}
+	$status = do_list($status);
+	$stati = array();
+	foreach ($status as $stat) {
+		if (empty($stat)) {
+			continue;
+		} else if (is_numeric($stat)) {
+			$stati[] = $stat;
+		} else {
+			$stati[] = getStatusNum($stat);
+		}
+	}
+	$statSQL = 'Status IN ('.join(',', $stati).')';
+	$timeSQL = '';
+	switch($time) {
+		case "any" : break;
+		case "future" : $timeSQL = " AND Posted > now()"; break;
+		default : $timeSQL = " AND Posted < now()"; break; // The past
+	}
+
+	// Sort
+	$sorder = (($dir=='next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
+	$orderby = array();
+	if ($datasort) {
+		$datasort = do_list($datasort);
+		foreach ($datasort as $item) {
+			switch($item) {
+				case 'section':
+					if ($section) {
+						$orderby[] = 'Section'.$sorder;
+					}
+					break;
+				case 'category':
+					if ($category) {
+						$orderby[] = 'Category1'.$sorder;
+						$orderby[] = 'Category2'.$sorder;
+					}
+					break;
+				case 'category1':
+					if ($category) {
+						$orderby[] = 'Category1'.$sorder;
+					}
+					break;
+				case 'category2':
+					if ($category) {
+						$orderby[] = 'Category2'.$sorder;
+					}
+					break;
+				case 'author':
+					if ($author) {
+						$orderby[] = 'AuthorID'.$sorder;
+					}
+					break;
+				default:
+					$orderby[] = $item.$sorder;
+			}
+		}
+	}
+	if ($timesort) {
+		$timesort = do_list($timesort);
+		foreach ($timesort as $item) {
+			switch(strtolower($item)) {
+				case 'lastmod':
+					$orderby[] = 'LastMod'.$sorder;
+					break;
+				case 'expires':
+					$orderby[] = 'Expires'.$sorder;
+					break;
+				case 'posted':
+				default:
+					$orderby[] = 'Posted'.$sorder;
+					break;
+			}
+		}
+	}
+
+	$orderby = ' ORDER BY ' . join(',', $orderby);
+
+	// Do it
+	assert_article();
+	$rs = safe_rows('*, unix_timestamp(Posted) as uPosted, unix_timestamp(Expires) as uExpires, unix_timestamp(LastMod) as uLastMod',
+	'textpattern',
+	$statSQL.
+		(($category) ? $catSQL : '').
+		(($section) ? $secSQL : '').
+		(($author) ? $authSQL : '').
+		$timeSQL.
+		$expired.
+		$orderby,
+	$debug);
+	if ($debug > 1 && $rs) {
+		echo '++ RECORD SET ++';
+		dmp($rs);
+	}
+	// Find the current article in the record set, then move to find next/prev
+	$last = $curr = $ctr = 1;
+
+	foreach ($rs as $row) {
+		if ($row['ID'] == $thisarticle['thisid']) {
+			$curr = $last;
+			break;
+		}
+		$last = $row; // Store current
+		$ctr++;
+	}
+
+	if ($curr !== 1) {
+		if ($dir=='next') {
+			$smd_last['position'] = $ctr;
+			$smd_last['section'] = $thisarticle['section'];
+			$smd_last['psec'] = $pretext['s'];
+			$smd_last['pcat'] = $pretext['c'];
+			$smd_last['category1'] = $thisarticle['category1'];
+			$smd_last['category2'] = $thisarticle['category2'];
+			$smd_last['author'] = $thisarticle['authorid'];
+		} else {
+			$smd_first['position'] = $ctr;
+			$smd_first['psec'] = $pretext['s'];
+			$smd_first['pcat'] = $pretext['c'];
+			$smd_first['section'] = $thisarticle['section'];
+			$smd_first['category1'] = $thisarticle['category1'];
+			$smd_first['category2'] = $thisarticle['category2'];
+			$smd_first['author'] = $thisarticle['authorid'];
+		}
+	} else {
+		if ($dir=='next') {
+			$smd_last = array();
+		} else {
+			$smd_first = array();
+		}
+	}
+
+	if ($debug) {
+		if ($dir=='next') {
+			echo '++ MOST RECENT (NEXT) ++';
+			dmp($smd_last);
+		} else {
+			echo '++ MOST RECENT (PREV) ++';
+			dmp($smd_first);
+		}
+	}
+
+	// Populate globals if the next/prev article exists
+	$out = '';
+	$saved = array();
+	if ($curr === 1) {
+		$out = parse($thing);
+	} else {
+		// Keep a note of where we were
+		article_push();
+		$saved['prev_id'] = $prev_id;
+		$saved['next_id'] = $next_id;
+		$saved['prev_title'] = $prev_title;
+		$saved['next_title'] = $next_title;
+
+		// Pretend we're in the new article, and fake the global vars
+		populateArticleData($curr);
+		$prev_id = ($dir=='prev') ? $curr['ID'] : '';
+		$next_id = ($dir=='next') ? $curr['ID'] : '';
+		$prev_title = ($dir=='prev') ? $curr['Title'] : '';
+		$next_title = ($dir=='next') ? $curr['Title'] : '';
+		$url = permlinkurl_id($curr['ID']);
+		$thing = (empty($thing)) ? '<a rel="'.$dir.'" href="'.$url.'" title="'.$curr['Title'].'">'.$curr['Title'].'</a>' : $thing;
+		$out = parse($thing);
+
+		// Restore everything
+		$prev_id = $saved['prev_id'];
+		$next_id = $saved['next_id'];
+		$prev_title = $saved['prev_title'];
+		$next_title = $saved['next_title'];
+		article_pop();
+	}
+	$smd_in_nearest = false;
+	return $out;
+}
+
+// ****************************
+// Private function: not for public consumption
+// ****************************
+function smd_link_to($atts, $thing = NULL) {
+	global $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
+
+	extract(lAtts(array(
+		'showalways' => 0,
+		'linkparts' => 'rel, title',
+		'wraptag' => '',
+		'class' => '',
+		'urlvars' => '',
+		'urlformat' => '',
+		'dir' => 'next', // Set by wrapper tags
+		'debug' => '0',
+	), $atts));
+
+	// Maintain any URL variables
+	$addArgs = array();
+	if($urlvars) {
+		$optencode = $optforce = $optpri = false;
+		if (strpos($urlvars, 'SMD_ALL') === 0) {
+			// Determine if options are to be applied globally
+			$urlopts = do_list($urlvars, ':');
+			$optencode = (in_array('ESCAPE', $urlopts)) ? true : false;
+			$optforce = (in_array('FORCE', $urlopts)) ? true : false;
+			$optpri = (in_array('TAG_PRIORITY', $urlopts)) ? true : false;
+			// POST overrides GET if both exist
+			$urlvars = array_merge(array_keys($_GET), array_keys($_POST));
+		} else {
+			$urlvars = do_list($urlvars);
+		}
+
+		foreach ($urlvars as $urlvar) {
+			$urlopts = do_list($urlvar, ':');
+			$encode = ($optencode || in_array('ESCAPE', $urlopts)) ? true : false;
+			$force = ($optforce || in_array('FORCE', $urlopts)) ? true : false;
+			$pri = ($optpri || in_array('TAG_PRIORITY', $urlopts)) ? true : false;
+			$urlparts = do_list($urlopts[0], '=');
+			$var = $urlparts[0];
+			$val = gps($urlparts[0]);
+			if ($pri) {
+				$val = (isset($urlparts[1])) ? $urlparts[1] : gps($urlparts[0]);
+			} else {
+				if ($val=='' && isset($urlparts[1])) {
+					$val = $urlparts[1];
+				}
+			}
+			$val = ($encode) ? htmlentities($val) : $val;
+			if ($val !== '' || $force) {
+				$addArgs[$var] = $val;
+			}
+		}
+	}
+
+	if ($debug && $addArgs) {
+		echo '++ URL VARS ++';
+		dmp($addArgs);
+   }
+
+	if ($urlformat == '') {
+		$urlformat = '?';
+		foreach ($addArgs as $addarg => $addval) {
+			$urlformat .= '{'.$addarg.'_var}={'.$addarg.'_val}';
+		}
+	}
+
+	// Generate the additional URL params as defined in urlformat
+	foreach ($addArgs as $addarg => $addval) {
+		$argvar = $addarg.'_var';
+		$argval = $addarg.'_val';
+		$urlformat = str_replace('{'.$argvar.'}', $addarg, $urlformat);
+		$urlformat = str_replace('{'.$argval.'}', $addval, $urlformat);
+	}
+
+	// Work out which parts of the link to include
+	$linkparts = do_list($linkparts);
+	$show_rel = in_array('rel', $linkparts) ? true : false;
+	$show_ttl = in_array('title', $linkparts) ? true : false;
+
+	if ($dir=='next' && (($smd_in_nearest) ? $smd_last : 1)) {
+		if ($next_id) {
+			$url = permlinkurl_id($next_id) . (($addArgs) ? $urlformat : '');
+			if ($thing) {
+				$thing = parse($thing);
+				$next_title = escape_title($next_title);
+
+				return doWrap(array('<a' . ($show_rel ? ' rel="next"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
+					($next_title != $thing ? (($show_ttl) ? ' title="'.$next_title.'"' : '') : '').
+					'>'.$thing.'</a>'), $wraptag, '', $class);
+			}
+			return $url;
+		} else {
+			return ($showalways) ? parse($thing) : '';
+		}
+	}
+	if ($dir=='prev' && (($smd_in_nearest) ? $smd_first : 1)) {
+		if ($prev_id) {
+			$url = permlinkurl_id($prev_id) . (($addArgs) ? $urlformat : '');
+			if ($thing) {
+				$thing = parse($thing);
+				$prev_title = escape_title($prev_title);
+
+				return doWrap(array('<a' . ($show_rel ? ' rel="prev"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
+					($prev_title != $thing ? (($show_ttl) ? ' title="'.$prev_title.'"' : '') : '').
+					'>'.$thing.'</a>'), $wraptag, '', $class);
+			}
+			return $url;
+		} else {
+			return ($showalways) ? parse($thing) : '';
+		}
+	}
+	return;
+}
+# --- END PLUGIN CODE ---
+if (0) {
+?>
+<!--
+# --- BEGIN PLUGIN HELP ---
+
 h1(#top). smd_horizon
 
 The existing tags @<txp:next_title />@, @<txp:link_to_next />@ and their @prev@ counterparts cease to function when they reach the first/last posted article in a section. If you have ever wanted to navigate off the TXP grid, this plugin can help.
@@ -392,3 +953,9 @@ h2(changelog). Changelog
 
 * 02 Dec 09 | 0.11 | Added @urlformat@ and @linkparts@ (both thanks speeke)
 * 19 Apr 09 | 0.10 | Initial release
+
+# --- END PLUGIN HELP ---
+-->
+<?php
+}
+?>
