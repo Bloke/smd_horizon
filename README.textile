@@ -1,0 +1,2 @@
+# smd_horizon
+Next/previous Textpattern article without restrictions
