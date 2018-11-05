@@ -17,7 +17,7 @@ $plugin['name'] = 'smd_horizon';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '0.11';
+$plugin['version'] = '0.12';
 $plugin['author'] = 'Stef Dawson';
 $plugin['author_uri'] = 'http://stefdawson.com/';
 $plugin['description'] = 'Next/previous article without restrictions';
@@ -246,7 +246,7 @@ function smd_nearest($atts, $thing) {
 	$smd_in_nearest = true;
 
 	$thing = (empty($form)) ? $thing : fetch_form($form);
-	$expired = ($publish_expired_articles) ? '' : ' AND (now() <= Expires or Expires = '.NULLDATETIME.')';
+	$expired = ($publish_expired_articles) ? '' : ' AND (now() <= Expires or Expires IS NULL)';
 	$safe_name = safe_pfx('textpattern');
 
 	// Filters
