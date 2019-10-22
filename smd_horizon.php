@@ -17,7 +17,7 @@ $plugin['name'] = 'smd_horizon';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '0.1.2';
+$plugin['version'] = '0.2.0';
 $plugin['author'] = 'Stef Dawson';
 $plugin['author_uri'] = 'https://stefdawson.com/';
 $plugin['description'] = 'Next/previous article without restrictions';
@@ -71,28 +71,50 @@ if (!defined('txpinterface'))
         @include_once('zem_tpl.php');
 
 # --- BEGIN PLUGIN CODE ---
+
+if (class_exists('\Textpattern\Tag\Registry')) {
+    Txp::get('\Textpattern\Tag\Registry')
+        ->register('smd_if_start')
+        ->register('smd_if_end')
+        ->register('smd_prev')
+        ->register('smd_next')
+        ->register('smd_link_to_prev')
+        ->register('smd_link_to_next');
+}
+
 // Public interfaces: convenience functions
-function smd_prev($atts, $thing) {
+function smd_prev($atts, $thing)
+{
 	$atts['dir'] = 'prev';
 	return smd_nearest($atts, $thing);
 }
-function smd_next($atts, $thing) {
+
+function smd_next($atts, $thing)
+{
 	$atts['dir'] = 'next';
 	return smd_nearest($atts, $thing);
 }
-function smd_link_to_prev($atts, $thing) {
+
+function smd_link_to_prev($atts, $thing)
+{
 	$atts['dir'] = 'prev';
 	return smd_link_to($atts, $thing);
 }
-function smd_link_to_next($atts, $thing) {
+
+function smd_link_to_next($atts, $thing)
+{
 	$atts['dir'] = 'next';
 	return smd_link_to($atts, $thing);
 }
-function smd_if_start($atts, $thing) {
+
+function smd_if_start($atts, $thing)
+{
 	$atts['dir'] = 'prev';
 	return smd_if_horizon($atts, $thing);
 }
-function smd_if_end($atts, $thing) {
+
+function smd_if_end($atts, $thing)
+{
 	$atts['dir'] = 'next';
 	return smd_if_horizon($atts, $thing);
 }
@@ -100,23 +122,26 @@ function smd_if_end($atts, $thing) {
 // ****************************
 // Private function: not for public consumption
 // ****************************
-function smd_if_horizon($atts, $thing) {
+function smd_if_horizon($atts, $thing)
+{
 	global $pretext, $thisarticle, $thiscategory, $smd_last, $smd_first, $smd_in_nearest;
 
 	extract(lAtts(array(
-		'type' => 'list',
+		'type'  => 'list',
 		'logic' => 'or',
-		'dir' => 'next',
+		'dir'   => 'next',
 		'debug' => 0,
 	), $atts));
 
 	$itout = array(); // For debug only
 	$type = do_list($type);
 	$out = array();
+
 	foreach ($type as $item) {
 		if ($debug) {
 			$itout[] = $item;
 		}
+
 		switch ($item) {
 			case 'list':
 				if ($smd_in_nearest) {
@@ -126,6 +151,7 @@ function smd_if_horizon($atts, $thing) {
 						$out[] = (empty($smd_first)) ? true : false;
 					}
 				}
+
 				break;
 			case 'category':
 				if ($smd_in_nearest) {
@@ -141,6 +167,7 @@ function smd_if_horizon($atts, $thing) {
 						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
 					}
 				}
+
 				break;
 			case 'author':
 				if ($smd_in_nearest) {
@@ -152,6 +179,7 @@ function smd_if_horizon($atts, $thing) {
 				} else {
 					// Not possible since author lists are not permitted in TXP
 				}
+
 				break;
 			case 'cat1':
 			case 'category1':
@@ -168,6 +196,7 @@ function smd_if_horizon($atts, $thing) {
 						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
 					}
 				}
+
 				break;
 			case 'cat2':
 			case 'category2':
@@ -184,6 +213,7 @@ function smd_if_horizon($atts, $thing) {
 						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
 					}
 				}
+
 				break;
 			case 'section':
 			default:
@@ -200,46 +230,54 @@ function smd_if_horizon($atts, $thing) {
 						$out[] = empty($pretext['prev_id']) ? true : false;
 					}
 				}
+
 				break;
 		}
 	}
+
 	if ($debug) {
 		echo '++ TEST RESULTS ++';
 		dmp($itout);
 		dmp($out);
 	}
+
 	$res = ($out) ? true : false;
+
 	if (strtolower($logic) == "and" && in_array(false, $out)) {
 		$res = false;
 	}
+
 	if (strtolower($logic) == "or" && !in_array(true, $out)) {
 		$res = false;
 	}
+
 	if ($debug) {
 		echo '++ FINAL RESULT ++';
 		dmp($res);
 	}
+
 	return parse(EvalElse($thing, $res));
 }
 
 // ****************************
 // Private function: not for public consumption
 // ****************************
-function smd_nearest($atts, $thing) {
+function smd_nearest($atts, $thing)
+{
 	global $pretext, $thisarticle, $thiscategory, $prefs, $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
 
 	extract(lAtts(array(
-		'section' => $pretext['s'],
+		'section'  => $pretext['s'],
 		'category' => $pretext['c'],
-		'author' => $pretext['author'],
+		'author'   => $pretext['author'],
 		'realname' => '',
-		'status' => '4',
-		'time' => 'any', // any, future, past
+		'status'   => '4',
+		'time'     => 'any', // any, future, past
 		'datasort' => 'section, category1, category2, author',
 		'timesort' => 'posted',
-		'form' => '',
-		'dir' => 'next', // Set by wrapper tags
-		'debug' => 0,
+		'form'     => '',
+		'dir'      => 'next', // Set by wrapper tags
+		'debug'    => 0,
 	), $atts));
 
 	extract($prefs);
@@ -251,33 +289,41 @@ function smd_nearest($atts, $thing) {
 
 	// Filters
 	$catSQL = $secSQL = $authSQL = '';
-	if($category) {
+
+	if ($category) {
 		$catSQL = doQuote(join("','", doSlash(do_list($category))));
 		$catSQL = ' AND ( Category1 IN ('.$catSQL.') OR Category2 IN ('.$catSQL.') ) ';
 	}
-	if($section) {
+
+	if ($section) {
 		$secSQL = ' AND Section IN ('.doQuote(join("','", doSlash(do_list($section)))).') ';
 	}
-	if($realname) {
+
+	if ($realname) {
 		$author = join(',', safe_column('name', 'txp_users', 'RealName IN ('. doQuote(join("','", doSlash(doArray(do_list($realname), 'urldecode')))) .')' ));
 	}
+
 	if($author) {
 		$authSQL = ' AND AuthorID IN ('.doQuote(join("','", doSlash(do_list($author)))).') ';
 	}
+
 	$status = do_list($status);
 	$stati = array();
+
 	foreach ($status as $stat) {
 		if (empty($stat)) {
 			continue;
-		} else if (is_numeric($stat)) {
+		} elseif (is_numeric($stat)) {
 			$stati[] = $stat;
 		} else {
 			$stati[] = getStatusNum($stat);
 		}
 	}
+
 	$statSQL = 'Status IN ('.join(',', $stati).')';
 	$timeSQL = '';
-	switch($time) {
+
+	switch ($time) {
 		case "any" : break;
 		case "future" : $timeSQL = " AND Posted > now()"; break;
 		default : $timeSQL = " AND Posted < now()"; break; // The past
@@ -286,54 +332,68 @@ function smd_nearest($atts, $thing) {
 	// Sort
 	$sorder = (($dir=='next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
 	$orderby = array();
+
 	if ($datasort) {
 		$datasort = do_list($datasort);
+
 		foreach ($datasort as $item) {
-			switch($item) {
+			switch ($item) {
 				case 'section':
 					if ($section) {
 						$orderby[] = 'Section'.$sorder;
 					}
+
 					break;
 				case 'category':
 					if ($category) {
 						$orderby[] = 'Category1'.$sorder;
 						$orderby[] = 'Category2'.$sorder;
 					}
+
 					break;
 				case 'category1':
 					if ($category) {
 						$orderby[] = 'Category1'.$sorder;
 					}
+
 					break;
 				case 'category2':
 					if ($category) {
 						$orderby[] = 'Category2'.$sorder;
 					}
+
 					break;
 				case 'author':
 					if ($author) {
 						$orderby[] = 'AuthorID'.$sorder;
 					}
+
 					break;
 				default:
 					$orderby[] = $item.$sorder;
+
+					break;
 			}
 		}
 	}
+
 	if ($timesort) {
 		$timesort = do_list($timesort);
+
 		foreach ($timesort as $item) {
-			switch(strtolower($item)) {
+			switch (strtolower($item)) {
 				case 'lastmod':
 					$orderby[] = 'LastMod'.$sorder;
+
 					break;
 				case 'expires':
 					$orderby[] = 'Expires'.$sorder;
+
 					break;
 				case 'posted':
 				default:
 					$orderby[] = 'Posted'.$sorder;
+
 					break;
 			}
 		}
@@ -353,10 +413,12 @@ function smd_nearest($atts, $thing) {
 		$expired.
 		$orderby,
 	$debug);
+
 	if ($debug > 1 && $rs) {
 		echo '++ RECORD SET ++';
 		dmp($rs);
 	}
+
 	// Find the current article in the record set, then move to find next/prev
 	$last = $curr = $ctr = 1;
 
@@ -365,6 +427,7 @@ function smd_nearest($atts, $thing) {
 			$curr = $last;
 			break;
 		}
+
 		$last = $row; // Store current
 		$ctr++;
 	}
@@ -408,6 +471,7 @@ function smd_nearest($atts, $thing) {
 	// Populate globals if the next/prev article exists
 	$out = '';
 	$saved = array();
+
 	if ($curr === 1) {
 		$out = parse($thing);
 	} else {
@@ -435,31 +499,36 @@ function smd_nearest($atts, $thing) {
 		$next_title = $saved['next_title'];
 		article_pop();
 	}
+
 	$smd_in_nearest = false;
+
 	return $out;
 }
 
 // ****************************
 // Private function: not for public consumption
 // ****************************
-function smd_link_to($atts, $thing = NULL) {
+function smd_link_to($atts, $thing = null)
+{
 	global $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
 
 	extract(lAtts(array(
 		'showalways' => 0,
-		'linkparts' => 'rel, title',
-		'wraptag' => '',
-		'class' => '',
-		'urlvars' => '',
-		'urlformat' => '',
-		'dir' => 'next', // Set by wrapper tags
-		'debug' => '0',
+		'linkparts'  => 'rel, title',
+		'wraptag'    => '',
+		'class'      => '',
+		'urlvars'    => '',
+		'urlformat'  => '',
+		'dir'        => 'next', // Set by wrapper tags
+		'debug'      => '0',
 	), $atts));
 
 	// Maintain any URL variables
 	$addArgs = array();
-	if($urlvars) {
+
+	if ($urlvars) {
 		$optencode = $optforce = $optpri = false;
+
 		if (strpos($urlvars, 'SMD_ALL') === 0) {
 			// Determine if options are to be applied globally
 			$urlopts = do_list($urlvars, ':');
@@ -480,6 +549,7 @@ function smd_link_to($atts, $thing = NULL) {
 			$urlparts = do_list($urlopts[0], '=');
 			$var = $urlparts[0];
 			$val = gps($urlparts[0]);
+
 			if ($pri) {
 				$val = (isset($urlparts[1])) ? $urlparts[1] : gps($urlparts[0]);
 			} else {
@@ -487,7 +557,9 @@ function smd_link_to($atts, $thing = NULL) {
 					$val = $urlparts[1];
 				}
 			}
+
 			$val = ($encode) ? htmlentities($val) : $val;
+
 			if ($val !== '' || $force) {
 				$addArgs[$var] = $val;
 			}
@@ -501,6 +573,7 @@ function smd_link_to($atts, $thing = NULL) {
 
 	if ($urlformat == '') {
 		$urlformat = '?';
+
 		foreach ($addArgs as $addarg => $addval) {
 			$urlformat .= '{'.$addarg.'_var}={'.$addarg.'_val}';
 		}
@@ -519,9 +592,10 @@ function smd_link_to($atts, $thing = NULL) {
 	$show_rel = in_array('rel', $linkparts) ? true : false;
 	$show_ttl = in_array('title', $linkparts) ? true : false;
 
-	if ($dir=='next' && (($smd_in_nearest) ? $smd_last : 1)) {
+	if ($dir == 'next' && (($smd_in_nearest) ? $smd_last : 1)) {
 		if ($next_id) {
 			$url = permlinkurl_id($next_id) . (($addArgs) ? $urlformat : '');
+
 			if ($thing) {
 				$thing = parse($thing);
 				$next_title = escape_title($next_title);
@@ -530,14 +604,17 @@ function smd_link_to($atts, $thing = NULL) {
 					($next_title != $thing ? (($show_ttl) ? ' title="'.$next_title.'"' : '') : '').
 					'>'.$thing.'</a>'), $wraptag, '', $class);
 			}
+
 			return $url;
 		} else {
 			return ($showalways) ? parse($thing) : '';
 		}
 	}
-	if ($dir=='prev' && (($smd_in_nearest) ? $smd_first : 1)) {
+
+	if ($dir == 'prev' && (($smd_in_nearest) ? $smd_first : 1)) {
 		if ($prev_id) {
 			$url = permlinkurl_id($prev_id) . (($addArgs) ? $urlformat : '');
+
 			if ($thing) {
 				$thing = parse($thing);
 				$prev_title = escape_title($prev_title);
@@ -546,11 +623,13 @@ function smd_link_to($atts, $thing = NULL) {
 					($prev_title != $thing ? (($show_ttl) ? ' title="'.$prev_title.'"' : '') : '').
 					'>'.$thing.'</a>'), $wraptag, '', $class);
 			}
+
 			return $url;
 		} else {
 			return ($showalways) ? parse($thing) : '';
 		}
 	}
+
 	return;
 }
 # --- END PLUGIN CODE ---
