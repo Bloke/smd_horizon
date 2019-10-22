@@ -17,9 +17,9 @@ $plugin['name'] = 'smd_horizon';
 // 1 = Plugin help is in raw HTML.  Not recommended.
 # $plugin['allow_html_help'] = 1;
 
-$plugin['version'] = '0.12';
+$plugin['version'] = '0.1.2';
 $plugin['author'] = 'Stef Dawson';
-$plugin['author_uri'] = 'http://stefdawson.com/';
+$plugin['author_uri'] = 'https://stefdawson.com/';
 $plugin['description'] = 'Next/previous article without restrictions';
 
 // Plugin load order:
@@ -947,12 +947,7 @@ bc. <txp:if_individual_article>
 
 h2(#author). Author / credits
 
-"Stef Dawson":http://stefdawson.com/contact.
-
-h2(changelog). Changelog
-
-* 02 Dec 09 | 0.11 | Added @urlformat@ and @linkparts@ (both thanks speeke)
-* 19 Apr 09 | 0.10 | Initial release
+"Stef Dawson":https://stefdawson.com/contact.
 
 # --- END PLUGIN HELP ---
 -->

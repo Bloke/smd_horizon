@@ -1,0 +1,13 @@
+h1. Changelog
+
+h2. 0.1.2 - 2018-11-05
+
+* Removed NULLDATETIME constant.
+
+h2. 0.1.1 - 2009-12-02
+
+* Added @urlformat@ and @linkparts@ (both thanks speeke).
+
+h2. 0.1.0 - 2009-04-19
+
+* Initial release.
