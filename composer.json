@@ -1,0 +1,16 @@
+{
+  "name": "bloke/smd_horizon",
+  "description": "Navigate next/previous Textpattern articles without restrictions",
+  "keywords": ["textpattern", "plugin", "navigation", "next", "previous", "article", "link"],
+  "homepage": "https://github.com/bloke/smd_horizon",
+  "license": "GPL-2.0",
+  "type": "textpattern-plugin",
+  "support": {
+    "issues": "https://github.com/bloke/smd_horizon/issues",
+    "source": "https://github.com/bloke/smd_horizon"
+  },
+  "require": {
+    "textpattern/lock": ">=4.3.0",
+    "textpattern/installer": "*"
+  }
+}

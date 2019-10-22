@@ -20,7 +20,7 @@ $plugin['name'] = 'smd_horizon';
 $plugin['version'] = '0.2.0';
 $plugin['author'] = 'Stef Dawson';
 $plugin['author_uri'] = 'https://stefdawson.com/';
-$plugin['description'] = 'Next/previous article without restrictions';
+$plugin['description'] = 'Navigate next/previous Textpattern articles without restrictions';
 
 // Plugin load order:
 // The default value of 5 would fit most plugins, while for instance comment
