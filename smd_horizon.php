@@ -85,38 +85,38 @@ if (class_exists('\Textpattern\Tag\Registry')) {
 // Public interfaces: convenience functions
 function smd_prev($atts, $thing)
 {
-	$atts['dir'] = 'prev';
-	return smd_nearest($atts, $thing);
+    $atts['dir'] = 'prev';
+    return smd_nearest($atts, $thing);
 }
 
 function smd_next($atts, $thing)
 {
-	$atts['dir'] = 'next';
-	return smd_nearest($atts, $thing);
+    $atts['dir'] = 'next';
+    return smd_nearest($atts, $thing);
 }
 
 function smd_link_to_prev($atts, $thing)
 {
-	$atts['dir'] = 'prev';
-	return smd_link_to($atts, $thing);
+    $atts['dir'] = 'prev';
+    return smd_link_to($atts, $thing);
 }
 
 function smd_link_to_next($atts, $thing)
 {
-	$atts['dir'] = 'next';
-	return smd_link_to($atts, $thing);
+    $atts['dir'] = 'next';
+    return smd_link_to($atts, $thing);
 }
 
 function smd_if_start($atts, $thing)
 {
-	$atts['dir'] = 'prev';
-	return smd_if_horizon($atts, $thing);
+    $atts['dir'] = 'prev';
+    return smd_if_horizon($atts, $thing);
 }
 
 function smd_if_end($atts, $thing)
 {
-	$atts['dir'] = 'next';
-	return smd_if_horizon($atts, $thing);
+    $atts['dir'] = 'next';
+    return smd_if_horizon($atts, $thing);
 }
 
 // ****************************
@@ -124,139 +124,139 @@ function smd_if_end($atts, $thing)
 // ****************************
 function smd_if_horizon($atts, $thing)
 {
-	global $pretext, $thisarticle, $thiscategory, $smd_last, $smd_first, $smd_in_nearest;
+    global $pretext, $thisarticle, $thiscategory, $smd_last, $smd_first, $smd_in_nearest;
 
-	extract(lAtts(array(
-		'type'  => 'list',
-		'logic' => 'or',
-		'dir'   => 'next',
-		'debug' => 0,
-	), $atts));
+    extract(lAtts(array(
+        'type'  => 'list',
+        'logic' => 'or',
+        'dir'   => 'next',
+        'debug' => 0,
+    ), $atts));
 
-	$itout = array(); // For debug only
-	$type = do_list($type);
-	$out = array();
+    $itout = array(); // For debug only
+    $type = do_list($type);
+    $out = array();
 
-	foreach ($type as $item) {
-		if ($debug) {
-			$itout[] = $item;
-		}
+    foreach ($type as $item) {
+        if ($debug) {
+            $itout[] = $item;
+        }
 
-		switch ($item) {
-			case 'list':
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (empty($smd_last)) ? true : false;
-					} else {
-						$out[] = (empty($smd_first)) ? true : false;
-					}
-				}
+        switch ($item) {
+            case 'list':
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (empty($smd_last)) ? true : false;
+                    } else {
+                        $out[] = (empty($smd_first)) ? true : false;
+                    }
+                }
 
-				break;
-			case 'category':
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (!empty($smd_last) && ($smd_last['category1'] != $thisarticle['category1'] || $smd_last['category2'] != $thisarticle['category2'])) ? true : false;
-					} else {
-						$out[] = (!empty($smd_first) && ($smd_first['category1'] != $thisarticle['category1'] || $smd_first['category2'] != $thisarticle['category2'])) ? true : false;
-					}
-				} else {
-					if ($dir == 'next') {
-						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
-					} else {
-						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
-					}
-				}
+                break;
+            case 'category':
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($smd_last) && ($smd_last['category1'] != $thisarticle['category1'] || $smd_last['category2'] != $thisarticle['category2'])) ? true : false;
+                    } else {
+                        $out[] = (!empty($smd_first) && ($smd_first['category1'] != $thisarticle['category1'] || $smd_first['category2'] != $thisarticle['category2'])) ? true : false;
+                    }
+                } else {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($thiscategory['is_last'])) ? true : false;
+                    } else {
+                        $out[] = (!empty($thiscategory['is_first'])) ? true : false;
+                    }
+                }
 
-				break;
-			case 'author':
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (!empty($smd_last) && $smd_last['author'] != $thisarticle['authorid']) ? true : false;
-					} else {
-						$out[] = (!empty($smd_first) && $smd_first['author'] != $thisarticle['authorid']) ? true : false;
-					}
-				} else {
-					// Not possible since author lists are not permitted in TXP
-				}
+                break;
+            case 'author':
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($smd_last) && $smd_last['author'] != $thisarticle['authorid']) ? true : false;
+                    } else {
+                        $out[] = (!empty($smd_first) && $smd_first['author'] != $thisarticle['authorid']) ? true : false;
+                    }
+                } else {
+                    // Not possible since author lists are not permitted in TXP
+                }
 
-				break;
-			case 'cat1':
-			case 'category1':
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (!empty($smd_last) && $smd_last['category1'] != $thisarticle['category1']) ? true : false;
-					} else {
-						$out[] = (!empty($smd_first) && $smd_first['category1'] != $thisarticle['category1']) ? true : false;
-					}
-				} else {
-					if ($dir == 'next') {
-						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
-					} else {
-						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
-					}
-				}
+                break;
+            case 'cat1':
+            case 'category1':
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($smd_last) && $smd_last['category1'] != $thisarticle['category1']) ? true : false;
+                    } else {
+                        $out[] = (!empty($smd_first) && $smd_first['category1'] != $thisarticle['category1']) ? true : false;
+                    }
+                } else {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($thiscategory['is_last'])) ? true : false;
+                    } else {
+                        $out[] = (!empty($thiscategory['is_first'])) ? true : false;
+                    }
+                }
 
-				break;
-			case 'cat2':
-			case 'category2':
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (!empty($smd_last) && $smd_last['category2'] != $thisarticle['category2']) ? true : false;
-					} else {
-						$out[] = (!empty($smd_first) && $smd_first['category2'] != $thisarticle['category2']) ? true : false;
-					}
-				} else {
-					if ($dir == 'next') {
-						$out[] = (!empty($thiscategory['is_last'])) ? true : false;
-					} else {
-						$out[] = (!empty($thiscategory['is_first'])) ? true : false;
-					}
-				}
+                break;
+            case 'cat2':
+            case 'category2':
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($smd_last) && $smd_last['category2'] != $thisarticle['category2']) ? true : false;
+                    } else {
+                        $out[] = (!empty($smd_first) && $smd_first['category2'] != $thisarticle['category2']) ? true : false;
+                    }
+                } else {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($thiscategory['is_last'])) ? true : false;
+                    } else {
+                        $out[] = (!empty($thiscategory['is_first'])) ? true : false;
+                    }
+                }
 
-				break;
-			case 'section':
-			default:
-				if ($smd_in_nearest) {
-					if ($dir == 'next') {
-						$out[] = (!empty($smd_last) && $smd_last['section'] != $thisarticle['section']) ? true : false;
-					} else {
-						$out[] = (!empty($smd_first) && $smd_first['section'] != $thisarticle['section']) ? true : false;
-					}
-				} else {
-					if ($dir == 'next') {
-						$out[] = empty($pretext['next_id']) ? true : false;
-					} else {
-						$out[] = empty($pretext['prev_id']) ? true : false;
-					}
-				}
+                break;
+            case 'section':
+            default:
+                if ($smd_in_nearest) {
+                    if ($dir == 'next') {
+                        $out[] = (!empty($smd_last) && $smd_last['section'] != $thisarticle['section']) ? true : false;
+                    } else {
+                        $out[] = (!empty($smd_first) && $smd_first['section'] != $thisarticle['section']) ? true : false;
+                    }
+                } else {
+                    if ($dir == 'next') {
+                        $out[] = empty($pretext['next_id']) ? true : false;
+                    } else {
+                        $out[] = empty($pretext['prev_id']) ? true : false;
+                    }
+                }
 
-				break;
-		}
-	}
+                break;
+        }
+    }
 
-	if ($debug) {
-		echo '++ TEST RESULTS ++';
-		dmp($itout);
-		dmp($out);
-	}
+    if ($debug) {
+        echo '++ TEST RESULTS ++';
+        dmp($itout);
+        dmp($out);
+    }
 
-	$res = ($out) ? true : false;
+    $res = ($out) ? true : false;
 
-	if (strtolower($logic) == "and" && in_array(false, $out)) {
-		$res = false;
-	}
+    if (strtolower($logic) == "and" && in_array(false, $out)) {
+        $res = false;
+    }
 
-	if (strtolower($logic) == "or" && !in_array(true, $out)) {
-		$res = false;
-	}
+    if (strtolower($logic) == "or" && !in_array(true, $out)) {
+        $res = false;
+    }
 
-	if ($debug) {
-		echo '++ FINAL RESULT ++';
-		dmp($res);
-	}
+    if ($debug) {
+        echo '++ FINAL RESULT ++';
+        dmp($res);
+    }
 
-	return parse($thing, $res);
+    return parse($thing, $res);
 }
 
 // ****************************
@@ -264,245 +264,245 @@ function smd_if_horizon($atts, $thing)
 // ****************************
 function smd_nearest($atts, $thing)
 {
-	global $pretext, $thisarticle, $thiscategory, $prefs, $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
+    global $pretext, $thisarticle, $thiscategory, $prefs, $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
 
-	extract(lAtts(array(
-		'section'  => $pretext['s'],
-		'category' => $pretext['c'],
-		'author'   => $pretext['author'],
-		'realname' => '',
-		'status'   => '4',
-		'time'     => 'any', // any, future, past
-		'datasort' => 'section, category1, category2, author',
-		'timesort' => 'posted',
-		'form'     => '',
-		'dir'      => 'next', // Set by wrapper tags
-		'debug'    => 0,
-	), $atts));
+    extract(lAtts(array(
+        'section'  => $pretext['s'],
+        'category' => $pretext['c'],
+        'author'   => $pretext['author'],
+        'realname' => '',
+        'status'   => '4',
+        'time'     => 'any', // any, future, past
+        'datasort' => 'section, category1, category2, author',
+        'timesort' => 'posted',
+        'form'     => '',
+        'dir'      => 'next', // Set by wrapper tags
+        'debug'    => 0,
+    ), $atts));
 
-	extract($prefs);
-	$smd_in_nearest = true;
+    extract($prefs);
+    $smd_in_nearest = true;
 
-	$thing = (empty($form)) ? $thing : fetch_form($form);
-	$expired = ($publish_expired_articles) ? '' : ' AND (now() <= Expires or Expires IS NULL)';
-	$safe_name = safe_pfx('textpattern');
+    $thing = (empty($form)) ? $thing : fetch_form($form);
+    $expired = ($publish_expired_articles) ? '' : ' AND (now() <= Expires or Expires IS NULL)';
+    $safe_name = safe_pfx('textpattern');
 
-	// Filters
-	$catSQL = $secSQL = $authSQL = '';
+    // Filters
+    $catSQL = $secSQL = $authSQL = '';
 
-	if ($category) {
-		$catSQL = doQuote(join("','", doSlash(do_list($category))));
-		$catSQL = ' AND ( Category1 IN ('.$catSQL.') OR Category2 IN ('.$catSQL.') ) ';
-	}
+    if ($category) {
+        $catSQL = doQuote(join("','", doSlash(do_list($category))));
+        $catSQL = ' AND ( Category1 IN ('.$catSQL.') OR Category2 IN ('.$catSQL.') ) ';
+    }
 
-	if ($section) {
-		$secSQL = ' AND Section IN ('.doQuote(join("','", doSlash(do_list($section)))).') ';
-	}
+    if ($section) {
+        $secSQL = ' AND Section IN ('.doQuote(join("','", doSlash(do_list($section)))).') ';
+    }
 
-	if ($realname) {
-		$author = join(',', safe_column('name', 'txp_users', 'RealName IN ('. doQuote(join("','", doSlash(doArray(do_list($realname), 'urldecode')))) .')' ));
-	}
+    if ($realname) {
+        $author = join(',', safe_column('name', 'txp_users', 'RealName IN ('. doQuote(join("','", doSlash(doArray(do_list($realname), 'urldecode')))) .')' ));
+    }
 
-	if ($author) {
-		$authSQL = ' AND AuthorID IN ('.doQuote(join("','", doSlash(do_list($author)))).') ';
-	}
+    if ($author) {
+        $authSQL = ' AND AuthorID IN ('.doQuote(join("','", doSlash(do_list($author)))).') ';
+    }
 
-	$status = do_list($status);
-	$stati = array();
+    $status = do_list($status);
+    $stati = array();
 
-	foreach ($status as $stat) {
-		if (empty($stat)) {
-			continue;
-		} elseif (is_numeric($stat)) {
-			$stati[] = $stat;
-		} else {
-			$stati[] = getStatusNum($stat);
-		}
-	}
+    foreach ($status as $stat) {
+        if (empty($stat)) {
+            continue;
+        } elseif (is_numeric($stat)) {
+            $stati[] = $stat;
+        } else {
+            $stati[] = getStatusNum($stat);
+        }
+    }
 
-	$statSQL = 'Status IN ('.join(',', $stati).')';
-	$timeSQL = '';
+    $statSQL = 'Status IN ('.join(',', $stati).')';
+    $timeSQL = '';
 
-	switch ($time) {
-		case "any" : break;
-		case "future" : $timeSQL = " AND Posted > now()"; break;
-		default : $timeSQL = " AND Posted < now()"; break; // The past
-	}
+    switch ($time) {
+        case "any" : break;
+        case "future" : $timeSQL = " AND Posted > now()"; break;
+        default : $timeSQL = " AND Posted < now()"; break; // The past
+    }
 
-	// Sort
-	$sorder = (($dir == 'next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
-	$orderby = array();
+    // Sort
+    $sorder = (($dir == 'next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
+    $orderby = array();
 
-	if ($datasort) {
-		$datasort = do_list($datasort);
+    if ($datasort) {
+        $datasort = do_list($datasort);
 
-		foreach ($datasort as $item) {
-			switch ($item) {
-				case 'section':
-					if ($section) {
-						$orderby[] = 'Section'.$sorder;
-					}
+        foreach ($datasort as $item) {
+            switch ($item) {
+                case 'section':
+                    if ($section) {
+                        $orderby[] = 'Section'.$sorder;
+                    }
 
-					break;
-				case 'category':
-					if ($category) {
-						$orderby[] = 'Category1'.$sorder;
-						$orderby[] = 'Category2'.$sorder;
-					}
+                    break;
+                case 'category':
+                    if ($category) {
+                        $orderby[] = 'Category1'.$sorder;
+                        $orderby[] = 'Category2'.$sorder;
+                    }
 
-					break;
-				case 'category1':
-					if ($category) {
-						$orderby[] = 'Category1'.$sorder;
-					}
+                    break;
+                case 'category1':
+                    if ($category) {
+                        $orderby[] = 'Category1'.$sorder;
+                    }
 
-					break;
-				case 'category2':
-					if ($category) {
-						$orderby[] = 'Category2'.$sorder;
-					}
+                    break;
+                case 'category2':
+                    if ($category) {
+                        $orderby[] = 'Category2'.$sorder;
+                    }
 
-					break;
-				case 'author':
-					if ($author) {
-						$orderby[] = 'AuthorID'.$sorder;
-					}
+                    break;
+                case 'author':
+                    if ($author) {
+                        $orderby[] = 'AuthorID'.$sorder;
+                    }
 
-					break;
-				default:
-					$orderby[] = $item.$sorder;
+                    break;
+                default:
+                    $orderby[] = $item.$sorder;
 
-					break;
-			}
-		}
-	}
+                    break;
+            }
+        }
+    }
 
-	if ($timesort) {
-		$timesort = do_list($timesort);
+    if ($timesort) {
+        $timesort = do_list($timesort);
 
-		foreach ($timesort as $item) {
-			switch (strtolower($item)) {
-				case 'lastmod':
-					$orderby[] = 'LastMod'.$sorder;
+        foreach ($timesort as $item) {
+            switch (strtolower($item)) {
+                case 'lastmod':
+                    $orderby[] = 'LastMod'.$sorder;
 
-					break;
-				case 'expires':
-					$orderby[] = 'Expires'.$sorder;
+                    break;
+                case 'expires':
+                    $orderby[] = 'Expires'.$sorder;
 
-					break;
-				case 'posted':
-				default:
-					$orderby[] = 'Posted'.$sorder;
+                    break;
+                case 'posted':
+                default:
+                    $orderby[] = 'Posted'.$sorder;
 
-					break;
-			}
-		}
-	}
+                    break;
+            }
+        }
+    }
 
-	$orderby = ' ORDER BY ' . join(',', $orderby);
+    $orderby = ' ORDER BY ' . join(',', $orderby);
 
-	// Do it
-	assert_article();
-	$rs = safe_rows('*, unix_timestamp(Posted) as uPosted, unix_timestamp(Expires) as uExpires, unix_timestamp(LastMod) as uLastMod',
-	'textpattern',
-	$statSQL.
-		(($category) ? $catSQL : '').
-		(($section) ? $secSQL : '').
-		(($author) ? $authSQL : '').
-		$timeSQL.
-		$expired.
-		$orderby,
-	$debug);
+    // Do it
+    assert_article();
+    $rs = safe_rows('*, unix_timestamp(Posted) as uPosted, unix_timestamp(Expires) as uExpires, unix_timestamp(LastMod) as uLastMod',
+    'textpattern',
+    $statSQL.
+        (($category) ? $catSQL : '').
+        (($section) ? $secSQL : '').
+        (($author) ? $authSQL : '').
+        $timeSQL.
+        $expired.
+        $orderby,
+    $debug);
 
-	if ($debug > 1 && $rs) {
-		echo '++ RECORD SET ++';
-		dmp($rs);
-	}
+    if ($debug > 1 && $rs) {
+        echo '++ RECORD SET ++';
+        dmp($rs);
+    }
 
-	// Find the current article in the record set, then move to find next/prev
-	$last = $curr = $ctr = 1;
+    // Find the current article in the record set, then move to find next/prev
+    $last = $curr = $ctr = 1;
 
-	foreach ($rs as $row) {
-		if ($row['ID'] == $thisarticle['thisid']) {
-			$curr = $last;
-			break;
-		}
+    foreach ($rs as $row) {
+        if ($row['ID'] == $thisarticle['thisid']) {
+            $curr = $last;
+            break;
+        }
 
-		$last = $row; // Store current
-		$ctr++;
-	}
+        $last = $row; // Store current
+        $ctr++;
+    }
 
-	if ($curr !== 1) {
-		if ($dir=='next') {
-			$smd_last['position'] = $ctr;
-			$smd_last['section'] = $thisarticle['section'];
-			$smd_last['psec'] = $pretext['s'];
-			$smd_last['pcat'] = $pretext['c'];
-			$smd_last['category1'] = $thisarticle['category1'];
-			$smd_last['category2'] = $thisarticle['category2'];
-			$smd_last['author'] = $thisarticle['authorid'];
-		} else {
-			$smd_first['position'] = $ctr;
-			$smd_first['psec'] = $pretext['s'];
-			$smd_first['pcat'] = $pretext['c'];
-			$smd_first['section'] = $thisarticle['section'];
-			$smd_first['category1'] = $thisarticle['category1'];
-			$smd_first['category2'] = $thisarticle['category2'];
-			$smd_first['author'] = $thisarticle['authorid'];
-		}
-	} else {
-		if ($dir=='next') {
-			$smd_last = array();
-		} else {
-			$smd_first = array();
-		}
-	}
+    if ($curr !== 1) {
+        if ($dir=='next') {
+            $smd_last['position'] = $ctr;
+            $smd_last['section'] = $thisarticle['section'];
+            $smd_last['psec'] = $pretext['s'];
+            $smd_last['pcat'] = $pretext['c'];
+            $smd_last['category1'] = $thisarticle['category1'];
+            $smd_last['category2'] = $thisarticle['category2'];
+            $smd_last['author'] = $thisarticle['authorid'];
+        } else {
+            $smd_first['position'] = $ctr;
+            $smd_first['psec'] = $pretext['s'];
+            $smd_first['pcat'] = $pretext['c'];
+            $smd_first['section'] = $thisarticle['section'];
+            $smd_first['category1'] = $thisarticle['category1'];
+            $smd_first['category2'] = $thisarticle['category2'];
+            $smd_first['author'] = $thisarticle['authorid'];
+        }
+    } else {
+        if ($dir=='next') {
+            $smd_last = array();
+        } else {
+            $smd_first = array();
+        }
+    }
 
-	if ($debug) {
-		if ($dir=='next') {
-			echo '++ MOST RECENT (NEXT) ++';
-			dmp($smd_last);
-		} else {
-			echo '++ MOST RECENT (PREV) ++';
-			dmp($smd_first);
-		}
-	}
+    if ($debug) {
+        if ($dir=='next') {
+            echo '++ MOST RECENT (NEXT) ++';
+            dmp($smd_last);
+        } else {
+            echo '++ MOST RECENT (PREV) ++';
+            dmp($smd_first);
+        }
+    }
 
-	// Populate globals if the next/prev article exists
-	$out = '';
-	$saved = array();
+    // Populate globals if the next/prev article exists
+    $out = '';
+    $saved = array();
 
-	if ($curr === 1) {
-		$out = parse($thing);
-	} else {
-		// Keep a note of where we were
-		article_push();
-		$saved['prev_id'] = $prev_id;
-		$saved['next_id'] = $next_id;
-		$saved['prev_title'] = $prev_title;
-		$saved['next_title'] = $next_title;
+    if ($curr === 1) {
+        $out = parse($thing);
+    } else {
+        // Keep a note of where we were
+        article_push();
+        $saved['prev_id'] = $prev_id;
+        $saved['next_id'] = $next_id;
+        $saved['prev_title'] = $prev_title;
+        $saved['next_title'] = $next_title;
 
-		// Pretend we're in the new article, and fake the global vars
-		populateArticleData($curr);
-		$prev_id = ($dir=='prev') ? $curr['ID'] : '';
-		$next_id = ($dir=='next') ? $curr['ID'] : '';
-		$prev_title = ($dir=='prev') ? $curr['Title'] : '';
-		$next_title = ($dir=='next') ? $curr['Title'] : '';
-		$url = permlinkurl_id($curr['ID']);
-		$thing = (empty($thing)) ? '<a rel="'.$dir.'" href="'.$url.'" title="'.$curr['Title'].'">'.$curr['Title'].'</a>' : $thing;
-		$out = parse($thing);
+        // Pretend we're in the new article, and fake the global vars
+        populateArticleData($curr);
+        $prev_id = ($dir=='prev') ? $curr['ID'] : '';
+        $next_id = ($dir=='next') ? $curr['ID'] : '';
+        $prev_title = ($dir=='prev') ? $curr['Title'] : '';
+        $next_title = ($dir=='next') ? $curr['Title'] : '';
+        $url = permlinkurl_id($curr['ID']);
+        $thing = (empty($thing)) ? '<a rel="'.$dir.'" href="'.$url.'" title="'.$curr['Title'].'">'.$curr['Title'].'</a>' : $thing;
+        $out = parse($thing);
 
-		// Restore everything
-		$prev_id = $saved['prev_id'];
-		$next_id = $saved['next_id'];
-		$prev_title = $saved['prev_title'];
-		$next_title = $saved['next_title'];
-		article_pop();
-	}
+        // Restore everything
+        $prev_id = $saved['prev_id'];
+        $next_id = $saved['next_id'];
+        $prev_title = $saved['prev_title'];
+        $next_title = $saved['next_title'];
+        article_pop();
+    }
 
-	$smd_in_nearest = false;
+    $smd_in_nearest = false;
 
-	return $out;
+    return $out;
 }
 
 // ****************************
@@ -510,127 +510,127 @@ function smd_nearest($atts, $thing)
 // ****************************
 function smd_link_to($atts, $thing = null)
 {
-	global $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
+    global $next_id, $prev_id, $next_title, $prev_title, $smd_last, $smd_first, $smd_in_nearest;
 
-	extract(lAtts(array(
-		'showalways' => 0,
-		'linkparts'  => 'rel, title',
-		'wraptag'    => '',
-		'class'      => '',
-		'urlvars'    => '',
-		'urlformat'  => '',
-		'dir'        => 'next', // Set by wrapper tags
-		'debug'      => '0',
-	), $atts));
+    extract(lAtts(array(
+        'showalways' => 0,
+        'linkparts'  => 'rel, title',
+        'wraptag'    => '',
+        'class'      => '',
+        'urlvars'    => '',
+        'urlformat'  => '',
+        'dir'        => 'next', // Set by wrapper tags
+        'debug'      => '0',
+    ), $atts));
 
-	// Maintain any URL variables
-	$addArgs = array();
+    // Maintain any URL variables
+    $addArgs = array();
 
-	if ($urlvars) {
-		$optencode = $optforce = $optpri = false;
+    if ($urlvars) {
+        $optencode = $optforce = $optpri = false;
 
-		if (strpos($urlvars, 'SMD_ALL') === 0) {
-			// Determine if options are to be applied globally
-			$urlopts = do_list($urlvars, ':');
-			$optencode = (in_array('ESCAPE', $urlopts)) ? true : false;
-			$optforce = (in_array('FORCE', $urlopts)) ? true : false;
-			$optpri = (in_array('TAG_PRIORITY', $urlopts)) ? true : false;
-			// POST overrides GET if both exist
-			$urlvars = array_merge(array_keys($_GET), array_keys($_POST));
-		} else {
-			$urlvars = do_list($urlvars);
-		}
+        if (strpos($urlvars, 'SMD_ALL') === 0) {
+            // Determine if options are to be applied globally
+            $urlopts = do_list($urlvars, ':');
+            $optencode = (in_array('ESCAPE', $urlopts)) ? true : false;
+            $optforce = (in_array('FORCE', $urlopts)) ? true : false;
+            $optpri = (in_array('TAG_PRIORITY', $urlopts)) ? true : false;
+            // POST overrides GET if both exist
+            $urlvars = array_merge(array_keys($_GET), array_keys($_POST));
+        } else {
+            $urlvars = do_list($urlvars);
+        }
 
-		foreach ($urlvars as $urlvar) {
-			$urlopts = do_list($urlvar, ':');
-			$encode = ($optencode || in_array('ESCAPE', $urlopts)) ? true : false;
-			$force = ($optforce || in_array('FORCE', $urlopts)) ? true : false;
-			$pri = ($optpri || in_array('TAG_PRIORITY', $urlopts)) ? true : false;
-			$urlparts = do_list($urlopts[0], '=');
-			$var = $urlparts[0];
-			$val = gps($urlparts[0]);
+        foreach ($urlvars as $urlvar) {
+            $urlopts = do_list($urlvar, ':');
+            $encode = ($optencode || in_array('ESCAPE', $urlopts)) ? true : false;
+            $force = ($optforce || in_array('FORCE', $urlopts)) ? true : false;
+            $pri = ($optpri || in_array('TAG_PRIORITY', $urlopts)) ? true : false;
+            $urlparts = do_list($urlopts[0], '=');
+            $var = $urlparts[0];
+            $val = gps($urlparts[0]);
 
-			if ($pri) {
-				$val = (isset($urlparts[1])) ? $urlparts[1] : gps($urlparts[0]);
-			} else {
-				if ($val=='' && isset($urlparts[1])) {
-					$val = $urlparts[1];
-				}
-			}
+            if ($pri) {
+                $val = (isset($urlparts[1])) ? $urlparts[1] : gps($urlparts[0]);
+            } else {
+                if ($val=='' && isset($urlparts[1])) {
+                    $val = $urlparts[1];
+                }
+            }
 
-			$val = ($encode) ? htmlentities($val) : $val;
+            $val = ($encode) ? htmlentities($val) : $val;
 
-			if ($val !== '' || $force) {
-				$addArgs[$var] = $val;
-			}
-		}
-	}
+            if ($val !== '' || $force) {
+                $addArgs[$var] = $val;
+            }
+        }
+    }
 
-	if ($debug && $addArgs) {
-		echo '++ URL VARS ++';
-		dmp($addArgs);
+    if ($debug && $addArgs) {
+        echo '++ URL VARS ++';
+        dmp($addArgs);
    }
 
-	if ($urlformat == '') {
-		$urlformat = '?';
+    if ($urlformat == '') {
+        $urlformat = '?';
 
-		foreach ($addArgs as $addarg => $addval) {
-			$urlformat .= '{'.$addarg.'_var}={'.$addarg.'_val}';
-		}
-	}
+        foreach ($addArgs as $addarg => $addval) {
+            $urlformat .= '{'.$addarg.'_var}={'.$addarg.'_val}';
+        }
+    }
 
-	// Generate the additional URL params as defined in urlformat
-	foreach ($addArgs as $addarg => $addval) {
-		$argvar = $addarg.'_var';
-		$argval = $addarg.'_val';
-		$urlformat = str_replace('{'.$argvar.'}', $addarg, $urlformat);
-		$urlformat = str_replace('{'.$argval.'}', $addval, $urlformat);
-	}
+    // Generate the additional URL params as defined in urlformat
+    foreach ($addArgs as $addarg => $addval) {
+        $argvar = $addarg.'_var';
+        $argval = $addarg.'_val';
+        $urlformat = str_replace('{'.$argvar.'}', $addarg, $urlformat);
+        $urlformat = str_replace('{'.$argval.'}', $addval, $urlformat);
+    }
 
-	// Work out which parts of the link to include
-	$linkparts = do_list($linkparts);
-	$show_rel = in_array('rel', $linkparts) ? true : false;
-	$show_ttl = in_array('title', $linkparts) ? true : false;
+    // Work out which parts of the link to include
+    $linkparts = do_list($linkparts);
+    $show_rel = in_array('rel', $linkparts) ? true : false;
+    $show_ttl = in_array('title', $linkparts) ? true : false;
 
-	if ($dir == 'next' && (($smd_in_nearest) ? $smd_last : 1)) {
-		if ($next_id) {
-			$url = permlinkurl_id($next_id) . (($addArgs) ? $urlformat : '');
+    if ($dir == 'next' && (($smd_in_nearest) ? $smd_last : 1)) {
+        if ($next_id) {
+            $url = permlinkurl_id($next_id) . (($addArgs) ? $urlformat : '');
 
-			if ($thing) {
-				$thing = parse($thing);
-				$next_title = escape_title($next_title);
+            if ($thing) {
+                $thing = parse($thing);
+                $next_title = escape_title($next_title);
 
-				return doWrap(array('<a' . ($show_rel ? ' rel="next"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
-					($next_title != $thing ? (($show_ttl) ? ' title="'.$next_title.'"' : '') : '').
-					'>'.$thing.'</a>'), $wraptag, '', $class);
-			}
+                return doWrap(array('<a' . ($show_rel ? ' rel="next"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
+                    ($next_title != $thing ? (($show_ttl) ? ' title="'.$next_title.'"' : '') : '').
+                    '>'.$thing.'</a>'), $wraptag, '', $class);
+            }
 
-			return $url;
-		} else {
-			return ($showalways) ? parse($thing) : '';
-		}
-	}
+            return $url;
+        } else {
+            return ($showalways) ? parse($thing) : '';
+        }
+    }
 
-	if ($dir == 'prev' && (($smd_in_nearest) ? $smd_first : 1)) {
-		if ($prev_id) {
-			$url = permlinkurl_id($prev_id) . (($addArgs) ? $urlformat : '');
+    if ($dir == 'prev' && (($smd_in_nearest) ? $smd_first : 1)) {
+        if ($prev_id) {
+            $url = permlinkurl_id($prev_id) . (($addArgs) ? $urlformat : '');
 
-			if ($thing) {
-				$thing = parse($thing);
-				$prev_title = escape_title($prev_title);
+            if ($thing) {
+                $thing = parse($thing);
+                $prev_title = escape_title($prev_title);
 
-				return doWrap(array('<a' . ($show_rel ? ' rel="prev"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
-					($prev_title != $thing ? (($show_ttl) ? ' title="'.$prev_title.'"' : '') : '').
-					'>'.$thing.'</a>'), $wraptag, '', $class);
-			}
+                return doWrap(array('<a' . ($show_rel ? ' rel="prev"' : '') . ' href="'.$url.'"'. (($class && !$wraptag) ? ' class="'.$class.'"' : '').
+                    ($prev_title != $thing ? (($show_ttl) ? ' title="'.$prev_title.'"' : '') : '').
+                    '>'.$thing.'</a>'), $wraptag, '', $class);
+            }
 
-			return $url;
-		} else {
-			return ($showalways) ? parse($thing) : '';
-		}
-	}
+            return $url;
+        } else {
+            return ($showalways) ? parse($thing) : '';
+        }
+    }
 
-	return;
+    return;
 }
 # --- END PLUGIN CODE ---
 if (0) {
