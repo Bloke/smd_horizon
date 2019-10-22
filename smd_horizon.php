@@ -324,9 +324,16 @@ function smd_nearest($atts, $thing)
     $timeSQL = '';
 
     switch ($time) {
-        case "any" : break;
-        case "future" : $timeSQL = " AND Posted > now()"; break;
-        default : $timeSQL = " AND Posted < now()"; break; // The past
+        case "any":
+            break;
+        case "future":
+            $timeSQL = " AND Posted > now()";
+
+            break;
+        default:
+            $timeSQL = " AND Posted < now()";
+
+            break; // The past
     }
 
     // Sort
@@ -731,10 +738,10 @@ Can be used as a drop-in replacement for @<txp:link_to_....>@ but with the extra
 bc. <txp:if_individual_article>
   <txp:smd_link_to_prev wraptag="div"
      class="nav_prev" urlvars="uname">&#171;
-     <txp:prev_title/></txp:smd_link_to_prev>
+     <txp:prev_title /></txp:smd_link_to_prev>
   <txp:smd_link_to_next wraptag="div"
      class="nav_next"
-     urlvars="uname"><txp:next_title/>
+     urlvars="uname"><txp:next_title />
      &#187;</txp:smd_link_to_next>
 </txp:if_individual_article>
 
@@ -745,12 +752,12 @@ Enhance the standard link_to_next/prev tags by wrapping smd_next/smd_prev around
 bc. <txp:if_individual_article>
    <txp:smd_prev>
       <txp:link_to_prev>
-         &#171; <txp:prev_title/>
+         &#171; <txp:title />
       </txp:link_to_prev>
    </txp:smd_prev>
    <txp:smd_next>
       <txp:link_to_next>
-         <txp:next_title/> &#187;
+         <txp:title /> &#187;
       </txp:link_to_next>
    </txp:smd_next>
 </txp:if_individual_article>
@@ -768,14 +775,14 @@ bc. <txp:if_individual_article>
          <txp:excerpt />
       </txp:smd_next>
       <txp:link_to_prev>
-         <txp:prev_title/>
+         <txp:title />
       </txp:link_to_prev>
    <txp:else />
       <txp:link_to_prev>
-         <txp:prev_title/>
+         <txp:title />
       </txp:link_to_prev>
       <txp:link_to_next>
-         <txp:next_title/>
+         <txp:title />
       </txp:link_to_next>
    </txp:smd_if_end>
 </txp:if_individual_article>
@@ -838,7 +845,7 @@ bc. <txp:if_individual_article>
       The articles begin here
       </txp:smd_if_start>
       <txp:link_to_prev>
-         <txp:prev_title/>
+         <txp:title />
       </txp:link_to_prev>
    </txp:smd_prev>
    <txp:smd_next section="articles, about">
@@ -846,7 +853,7 @@ bc. <txp:if_individual_article>
       The end of the road
       </txp:smd_if_end>
       <txp:link_to_next>
-         <txp:next_title/>
+         <txp:title />
       </txp:link_to_next>
    </txp:smd_next>
 </txp:if_individual_article>
@@ -868,7 +875,7 @@ bc. <txp:if_individual_article>
          </txp:link_to_prev>
       <txp:else />
          <txp:link_to_prev>
-            <txp:prev_title/>
+            <txp:title />
          </txp:link_to_prev>
       </txp:smd_if_start>
    </txp:smd_prev>
@@ -879,7 +886,7 @@ bc. <txp:if_individual_article>
          </txp:link_to_next>
       <txp:else />
          <txp:link_to_next>
-            <txp:next_title/>
+            <txp:title />
          </txp:link_to_next>
       </txp:smd_if_end>
    </txp:smd_next>
@@ -899,12 +906,12 @@ bc. <txp:if_individual_article>
          </txp:smd_if_start>
       </txp:smd_if_start>
       <txp:link_to_prev>
-         <txp:prev_title/>
+         <txp:title />
       </txp:link_to_prev>
    </txp:smd_prev>
    <txp:smd_next section="articles, about, products">
       <txp:link_to_next>
-         <txp:next_title/>
+         <txp:title />
       </txp:link_to_next>
       <txp:smd_if_end type="list">
       The end of the road
@@ -929,12 +936,12 @@ If you order your articles by category1 you can identify when the next (or previ
 bc. <txp:if_individual_article>
    <txp:smd_prev>
       <txp:link_to_prev>
-         &#171; <txp:prev_title/>
+         &#171; <txp:title />
       </txp:link_to_prev>
    </txp:smd_prev>
    <txp:smd_next>
       <txp:link_to_next>
-         <txp:next_title/> &#187;
+         <txp:title /> &#187;
       </txp:link_to_next>
       <txp:smd_if_end type="category1">
          Next cat: <txp:category1 link="1" />
