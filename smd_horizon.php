@@ -256,7 +256,7 @@ function smd_if_horizon($atts, $thing)
 		dmp($res);
 	}
 
-	return parse(EvalElse($thing, $res));
+	return parse($thing, $res);
 }
 
 // ****************************
@@ -303,7 +303,7 @@ function smd_nearest($atts, $thing)
 		$author = join(',', safe_column('name', 'txp_users', 'RealName IN ('. doQuote(join("','", doSlash(doArray(do_list($realname), 'urldecode')))) .')' ));
 	}
 
-	if($author) {
+	if ($author) {
 		$authSQL = ' AND AuthorID IN ('.doQuote(join("','", doSlash(do_list($author)))).') ';
 	}
 
@@ -330,7 +330,7 @@ function smd_nearest($atts, $thing)
 	}
 
 	// Sort
-	$sorder = (($dir=='next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
+	$sorder = (($dir == 'next') ? ' DESC' : ' ASC'); // Negative logic to avoid lookahead: the "last" row seen is always the one required
 	$orderby = array();
 
 	if ($datasort) {
